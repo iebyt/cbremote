@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="app_name">CB Remote</string>
+    <string name="intro_message">
+        <![CDATA[
+            This app is designed to control supported Canon DSLR using Bluetooth LE.
+        ]]>
+    </string>
+</resources>

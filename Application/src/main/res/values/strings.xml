@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ble_not_supported">Bluetooth LE is not supported</string>
+    <string name="label_data">Data:</string>
+    <string name="label_device_address">Device address:</string>
+    <string name="label_state">State:</string>
+    <string name="no_data">No data</string>
+    <string name="connected">Connected</string>
+    <string name="connecting">Connecting...</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="title_devices">CB Remote</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+
+    <string name="dialog_ok">OK</string>
+    <string name="dialogs_cancel">Cancel</string>
+
+    <string name="location_permission_title">Location Permission</string>
+    <string name="location_permission_message">For Android 6.0 and above location permission is required to use bluetooth.</string>
+    <string name="location_permission_granted">Location permission granted</string>
+    <string name="location_permission_denied">Location permission denied</string>
+
+    <string name="location_enable_title">Turn On Location</string>
+    <string name="location_enable_message">For Android 6.0 and above location is required to use bluetooth. Go to Settings?</string>
+
+    <string name="unknown_device">Unknown device</string>
+    <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="unknown_service">Unknown service</string>
+
+
+    <string name="bluetooth_disconnect_message">Disconnect and stop tasks?</string>
+    <string name="bluetooth_disconnect_ok">Disconnect</string>
+
+    <string name="label_delay">Delay</string>
+    <string name="label_interval">Interval</string>
+    <string name="label_shutter">Shutter</string>
+    <string name="label_indev">In Development</string>
+
+
+    <!-- Menu items -->
+    <string name="menu_connect">Connect</string>
+    <string name="menu_disconnect">Disconnect</string>
+    <string name="menu_scan">Scan</string>
+    <string name="menu_stop">Stop</string>
+</resources>

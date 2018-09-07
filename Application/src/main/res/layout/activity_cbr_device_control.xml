@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="10dp"
+    android:orientation="vertical"
+    android:background="#737373">
+
+    <LinearLayout
+        android:id="@+id/lin1"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/device_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Device Address"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/connection_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="@string/disconnected"
+            android:textColor="#aa0000"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/lin1"
+        android:orientation="vertical"
+        android:background="@drawable/btn_lin_box">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_mode_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="Mode"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tv_delay_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="Delay"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+
+
+            <TextView
+                android:id="@+id/tv_progress_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="Progress"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tv_mode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="One"
+                android:textAlignment="center"
+                android:gravity="center_horizontal"
+                android:textSize="16sp"
+                android:textColor="#ffffff"/>
+
+            <TextView
+                android:id="@+id/tv_delay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0s"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:gravity="center_horizontal"
+                android:textColor="#ffffff"/>
+
+            <TextView
+                android:id="@+id/tv_progress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:gravity="center_horizontal"
+                android:textColor="#ffffff"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/lin2"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/lin4"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/btn_lin_box">
+
+        <Button
+            android:id="@+id/btn_mode_photo"
+            android:onClick="setMode"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Photo"
+            android:background="@drawable/btn_bg_active"
+            android:textColor="#ffffff"/>
+
+        <Button
+            android:id="@+id/btn_mode_video"
+            android:onClick="setMode"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Video"
+            android:background="@drawable/btn_bg_inactive"
+            android:textColor="#ffffff"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin3"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@id/lin2"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center">
+            <Button
+                android:id="@+id/btn_auto_focus"
+
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="AF"
+                android:textColor="#ffffff"
+                android:background="@drawable/btn_bg_round"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center">
+            <Button
+                android:id="@+id/btn_delay"
+                android:onClick="showDelayDialog"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="Delay"
+                android:textColor="#ffffff"
+                android:background="@drawable/btn_bg_round"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:visibility="visible"/>
+
+            <Button
+                android:id="@+id/btn_stop"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="Stop"
+                android:textColor="#ffffff"
+                android:background="@drawable/btn_bg_stop"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:onClick="stopClick"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/lin3">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/footerlin"
+            android:layout_alignParentTop="true">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintDimensionRatio="H,1:1"
+                android:layout_marginBottom="10dp"
+                android:padding="30dp"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/center_btn_layout_bg">
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/center_btn_shutter_photo"
+                        android:id="@+id/btn_shutter"
+                        android:onClick="shutterClick"/>
+                </LinearLayout>
+            </LinearLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:id="@+id/footerlin">
+            <Button
+                android:id="@+id/btn_mode_one_shot"
+                android:onClick="setMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:text="One"
+                android:layout_weight="1"
+                android:background="@drawable/mode_btn_bg_active"
+                android:textColor="#ffffff"
+                android:layout_marginRight="5dp"/>
+            <Button
+                android:id="@+id/btn_mode_repeat"
+                android:onClick="setMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:text="Repeat"
+                android:layout_weight="1"
+                android:background="@drawable/mode_btn_bg_inactive"
+                android:textColor="#ffffff"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"/>
+            <Button
+                android:id="@+id/btn_mode_bulb"
+                android:onClick="setMode"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:text="Bulb"
+                android:layout_weight="1"
+                android:background="@drawable/mode_btn_bg_inactive"
+                android:textColor="#ffffff"
+                android:layout_marginLeft="5dp"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>
