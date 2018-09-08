@@ -8,9 +8,11 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -153,6 +155,10 @@ public class CBRMainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(broadcastReceiver,intentFilter);
+
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
 
@@ -179,7 +185,7 @@ public class CBRMainActivity extends AppCompatActivity {
             mLeDeviceListAdapter = new CBRMainActivity.LeDeviceListAdapter();
 //            setListAdapter(mLeDeviceListAdapter);
             listView.setAdapter(mLeDeviceListAdapter);
-            scanLeDevice(true);
+//            scanLeDevice(true);
         }
     }
 
@@ -204,7 +210,7 @@ public class CBRMainActivity extends AppCompatActivity {
         } catch (Exception e) {
 
         }
-
+        unregisterReceiver(broadcastReceiver);
     }
 
 
@@ -407,5 +413,27 @@ public class CBRMainActivity extends AppCompatActivity {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/iebyt/cbremote/blob/master/README.md#supported-canon-cameras"));
         startActivity(browserIntent);
     }
+
+    private BroadcastReceiver broadcastReceiver=new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        scanLeDevice(true);
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        break;
+                }
+            }
+        }
+    };
 
 }
