@@ -17,9 +17,6 @@ public class CBRGattAttributes {
         // Sample Characteristics.
         attributes.put("00002a29-0000-1000-8000-00805f9b34fb", "Shutter Control");
         attributes.put("00050002-0000-1000-0000-d8492fffa821", "Device Pairing Control");
-
-        //attributes.put("00050000-0000-1000-0000-d8492fffa821", "Manufacturer Name String");
-
     }
 
     public static String lookup(String uuid, String defaultName) {

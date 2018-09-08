@@ -1,14 +1,13 @@
-
 package com.iebyt.cbremote;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ListActivity;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,22 +15,21 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.location.LocationManager;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
-import android.media.session.MediaSession;
-import android.os.Bundle;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -39,16 +37,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Activity for scanning and displaying available Bluetooth LE devices.
- */
-public class CBRDeviceScanActivity extends ListActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
-    private LeDeviceListAdapter mLeDeviceListAdapter;
+public class CBRMainActivity extends AppCompatActivity {
+
+    private CBRMainActivity.LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
     private ProgressBar progressBar;
+    private ListView listView;
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int PERMISSION_REQUEST_LOCATION = 2;
@@ -56,10 +54,32 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
     private static final long SCAN_PERIOD = 10000;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setTitle(R.string.title_devices);
+        setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.ic_launcher);
+        getSupportActionBar().setTitle(" CB Remote");
+
+
         mHandler = new Handler();
+        listView=findViewById(R.id.lv_device_list);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final BluetoothDevice device = mLeDeviceListAdapter.getDevice(i);
+                if (device == null) return;
+                final Intent intent = new Intent(getApplicationContext(), CBRDeviceControlActivity.class);
+                intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
+                intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+                if (mScanning) {
+                    scanLeDevice(false);
+                }
+                startActivity(intent);
+            }
+        });
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
@@ -80,10 +100,23 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
             finish();
             return;
         }
-
-
-
     }
+
+
+//    @Override
+//    protected void onListItemClick(ListView l, View v, int position, long id) {
+//        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
+//        if (device == null) return;
+//        final Intent intent = new Intent(this, CBRDeviceControlActivity.class);
+//        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
+//        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+//        if (mScanning) {
+//            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+//            mScanning = false;
+//        }
+//        startActivity(intent);
+//    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -107,7 +140,6 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_scan:
-                mLeDeviceListAdapter.clear();
                 scanLeDevice(true);
                 break;
             case R.id.menu_stop:
@@ -129,8 +161,7 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
             intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, CBRBluetoothLeService.currentDeviceName);
             intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, CBRBluetoothLeService.currentDeviceAddress);
             if (mScanning) {
-                mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                mScanning = false;
+                scanLeDevice(false);
             }
             startActivity(intent);
 
@@ -145,11 +176,13 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
             }
 
             // Initializes list view adapter.
-            mLeDeviceListAdapter = new LeDeviceListAdapter();
-            setListAdapter(mLeDeviceListAdapter);
+            mLeDeviceListAdapter = new CBRMainActivity.LeDeviceListAdapter();
+//            setListAdapter(mLeDeviceListAdapter);
+            listView.setAdapter(mLeDeviceListAdapter);
             scanLeDevice(true);
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -174,37 +207,28 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
 
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
-        if (device == null) return;
-        final Intent intent = new Intent(this, CBRDeviceControlActivity.class);
-        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
-        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-        if (mScanning) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
-            mScanning = false;
-        }
-        startActivity(intent);
-    }
+
 
     private void scanLeDevice(final boolean enable) {
+
+        final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         if (enable) {
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                    bluetoothLeScanner.stopScan(mLeScanCallback);
                     invalidateOptionsMenu();
                 }
             }, SCAN_PERIOD);
-
+            mLeDeviceListAdapter.clear();
+            mLeDeviceListAdapter.notifyDataSetChanged();
             mScanning = true;
-            mBluetoothAdapter.startLeScan(mLeScanCallback);
+            bluetoothLeScanner.startScan(mLeScanCallback);
         } else {
             mScanning = false;
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            bluetoothLeScanner.stopScan(mLeScanCallback);
         }
         invalidateOptionsMenu();
     }
@@ -217,7 +241,7 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
         public LeDeviceListAdapter() {
             super();
             mLeDevices = new ArrayList<BluetoothDevice>();
-            mInflator = CBRDeviceScanActivity.this.getLayoutInflater();
+            mInflator = CBRMainActivity.this.getLayoutInflater();
         }
 
         public void addDevice(BluetoothDevice device) {
@@ -251,16 +275,16 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
-            ViewHolder viewHolder;
+            CBRMainActivity.ViewHolder viewHolder;
             // General ListView optimization code.
             if (view == null) {
                 view = mInflator.inflate(R.layout.listitem_scan, null);
-                viewHolder = new ViewHolder();
+                viewHolder = new CBRMainActivity.ViewHolder();
                 viewHolder.deviceAddress = (TextView) view.findViewById(R.id.device_address);
                 viewHolder.deviceName = (TextView) view.findViewById(R.id.device_name);
                 view.setTag(viewHolder);
             } else {
-                viewHolder = (ViewHolder) view.getTag();
+                viewHolder = (CBRMainActivity.ViewHolder) view.getTag();
             }
 
             BluetoothDevice device = mLeDevices.get(i);
@@ -276,19 +300,24 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
     }
 
     // Device scan callback.
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLeDeviceListAdapter.addDevice(device);
-                            mLeDeviceListAdapter.notifyDataSetChanged();
-                        }
-                    });
-                }
-            };
+
+    private ScanCallback mLeScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            mLeDeviceListAdapter.addDevice(result.getDevice());
+            mLeDeviceListAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+        }
+    };
 
     static class ViewHolder {
         TextView deviceName;
@@ -324,7 +353,7 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //Prompt the user once explanation has been shown
-                                ActivityCompat.requestPermissions(CBRDeviceScanActivity.this,
+                                ActivityCompat.requestPermissions(CBRMainActivity.this,
                                         new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                                         PERMISSION_REQUEST_LOCATION);
                             }
@@ -343,7 +372,6 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
         }
     }
 
-
     public void enableLocation(){
         boolean gps_enabled=false, network_enabled=false;
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
@@ -361,19 +389,23 @@ public class CBRDeviceScanActivity extends ListActivity implements ActivityCompa
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     Intent myIntent = new Intent( Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    CBRDeviceScanActivity.this.startActivity(myIntent);
+                    CBRMainActivity.this.startActivity(myIntent);
                 }
             });
             dialog.setNegativeButton(R.string.dialogs_cancel, new DialogInterface.OnClickListener() {
 
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    // TODO Auto-generated method stub
                     dialogInterface.dismiss();
                 }
             });
             dialog.show();
         }
+    }
+
+    public void showHelp(View v){
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/iebyt/cbremote/blob/master/README.md#supported-canon-cameras"));
+        startActivity(browserIntent);
     }
 
 }

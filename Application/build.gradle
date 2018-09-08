@@ -39,7 +39,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName '1.0.0-alpha1'
+        versionName '1.0.0-beta'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -57,5 +57,19 @@ android {
 
     }
     productFlavors {
+    }
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
 }

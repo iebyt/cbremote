@@ -27,9 +27,12 @@ Important Notes
 
 Supported Canon Cameras
 ------------
-1. Canon EOS 200D/Rebel SL2
+1. Canon EOS 6D Mark II
+1. Canon EOS 77D
+1. Canon EOS 800D/Rebel T7i
+1. Canon EOS 200D/Rebel SL2 (Tested)
 
-Note: This is incomplete list. It will be update as more devices are tested to work with this app.
+Note: This app should work with any Canon camera that supports canon BR-E1 bluetooth remote.
 
 Please create a PR to add another device if it is supported but not in this list.
 

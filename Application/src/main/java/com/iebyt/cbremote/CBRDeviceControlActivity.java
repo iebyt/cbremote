@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -85,16 +84,16 @@ public class CBRDeviceControlActivity extends Activity {
     private void initBluetoothConnection(IBinder service) {
         mBluetoothLeService = ((CBRBluetoothLeService.LocalBinder) service).getService();
         if (!mBluetoothLeService.initialize()) {
-            Log.d(TAG, "Unable to initialize Bluetooth");
+            //Log.d(TAG, "Unable to initialize Bluetooth");
             finish();
         }
         // Automatically connects to the device upon successful start-up initialization.
-        Log.d(TAG, "Service in onServiceConnected");
-        if (mBluetoothLeService.mConnectionState == CBRBluetoothLeService.STATE_CONNECTED) {
+        //Log.d(TAG, "Service in onServiceConnected");
+        if (CBRBluetoothLeService.mConnectionState == CBRBluetoothLeService.STATE_CONNECTED) {
             mConnected = true;
             updateConnectionState(R.string.connected);
             invalidateOptionsMenu();
-        } else if (mBluetoothLeService.mConnectionState == CBRBluetoothLeService.STATE_CONNECTING) {
+        } else if (CBRBluetoothLeService.mConnectionState == CBRBluetoothLeService.STATE_CONNECTING) {
             // Do wait
         } else {
             mBluetoothLeService.connect(mDeviceAddress);
@@ -138,7 +137,7 @@ public class CBRDeviceControlActivity extends Activity {
             }
 
             if (CBRConstants.ACTION_MSG_SHUTTER_BUTTON_CLICK.equals(action)) {
-                Log.d("receiver", "Got message: " + message);
+                //Log.d("receiver", "Got message: " + message);
                 mButtonShutter.setPressed(true);
                 final Handler timerHandler = new Handler();
                 timerHandler.postDelayed(new Runnable() {
@@ -237,7 +236,7 @@ public class CBRDeviceControlActivity extends Activity {
 
         }
 
-        Log.d(TAG, "Activity created");
+        //Log.d(TAG, "Activity created");
     }
 
     @Override
@@ -248,7 +247,7 @@ public class CBRDeviceControlActivity extends Activity {
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, makeUIUpdateIntentFilter());
         if (mBluetoothLeService != null && CBRBluetoothLeService.mConnectionState == CBRBluetoothLeService.STATE_DISCONNECTED) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-            Log.d(TAG, "Connect request result=" + result);
+            //Log.d(TAG, "Connect request result=" + result);
         }
 
         CBRBluetoothLeService.isControlActivityVisible = true;

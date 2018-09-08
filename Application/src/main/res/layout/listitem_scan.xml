@@ -8,12 +8,14 @@
         android:id="@+id/device_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="34dp" />
+        android:textSize="34dp"
+        android:textColor="#000000"/>
 
     <TextView
         android:id="@+id/device_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="5dp"
-        android:textSize="12dp" />
+        android:textSize="12dp"
+        android:textColor="#000000"/>
 </LinearLayout>

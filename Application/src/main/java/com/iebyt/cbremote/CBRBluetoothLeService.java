@@ -30,7 +30,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.KeyEvent;
 
 import java.nio.charset.StandardCharsets;
@@ -112,24 +111,25 @@ public class CBRBluetoothLeService extends Service {
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+
+            //Log.i(TAG, "Connection state changed");
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
                 broadcastUpdate(intentAction);
-                Log.i(TAG, "Connected to GATT server.");
+                //Log.i(TAG, "Connected to GATT server.");
 
                 // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        mBluetoothGatt.discoverServices());
-
+                //Log.i(TAG, "Attempting to start service discovery:");
+                mBluetoothGatt.discoverServices();
                 startCBRForegroundService();
 
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-                Log.i(TAG, "Disconnected from GATT server.");
+                //Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
 
                 if (isControlActivityVisible == false) {
@@ -145,7 +145,7 @@ public class CBRBluetoothLeService extends Service {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
 
             } else {
-                Log.i(TAG, "onServicesDiscovered received: " + status);
+                //Log.i(TAG, "onServicesDiscovered received: " + status);
             }
         }
 
@@ -209,7 +209,7 @@ public class CBRBluetoothLeService extends Service {
     public IBinder onBind(Intent intent) {
         currentDeviceName = intent.getStringExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME);
         currentDeviceAddress = intent.getStringExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS);
-        Log.i(TAG, "Service Bound");
+        //Log.i(TAG, "Service Bound");
         startService(new Intent(this, CBRBluetoothLeService.class));
         return mBinder;
     }
@@ -220,7 +220,7 @@ public class CBRBluetoothLeService extends Service {
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
         //close();  //use this to disconnect bluetooth on unbind
-        Log.e(TAG, "Service Unbound");
+        //Log.e(TAG, "Service Unbound");
         return super.onUnbind(intent);
     }
 
@@ -237,14 +237,14 @@ public class CBRBluetoothLeService extends Service {
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                //Log.e(TAG, "Unable to initialize BluetoothManager.");
                 return false;
             }
         }
 
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+            //Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
 
@@ -262,14 +262,14 @@ public class CBRBluetoothLeService extends Service {
      */
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
-            Log.e(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            //Log.e(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
 
         // Previously connected device.  Try to reconnect.
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+            //Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection."+mBluetoothDeviceAddress);
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
                 return true;
@@ -280,13 +280,13 @@ public class CBRBluetoothLeService extends Service {
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
-            Log.w(TAG, "Device not found.  Unable to connect.");
+            //Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-        Log.d(TAG, "Trying to create a new connection.");
+        //Log.d(TAG, "Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
         mConnectionState = STATE_CONNECTING;
         return true;
@@ -300,7 +300,7 @@ public class CBRBluetoothLeService extends Service {
      */
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.e(TAG, "BluetoothAdapter not initialized");
+            //Log.e(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.disconnect();
@@ -325,7 +325,7 @@ public class CBRBluetoothLeService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "Service created");
+        //Log.i(TAG, "Service created");
         createNotificationChannel();
 
         mContext = getApplicationContext();
@@ -349,13 +349,13 @@ public class CBRBluetoothLeService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         startCBRForegroundService();
         setMediaSession();
-        Log.d(TAG, "Service start command");
+        //Log.d(TAG, "Service start command");
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Service destroyed");
+        //Log.d(TAG, "Service destroyed");
         try {
             disconnect();
             close();
@@ -369,13 +369,13 @@ public class CBRBluetoothLeService extends Service {
 
     @Override
     public void onRebind(Intent intent) {
-        Log.d(TAG, "Service rebind");
+        //Log.d(TAG, "Service rebind");
         super.onRebind(intent);
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        Log.d(TAG, "Service task removed");
+        //Log.d(TAG, "Service task removed");
 
         if (!wakeLock.isHeld()) {
             disconnect();
@@ -408,10 +408,10 @@ public class CBRBluetoothLeService extends Service {
 
 
     private void startCBRForegroundService() {
-        Log.d(TAG, "Start foreground service.");
+        //Log.d(TAG, "Start foreground service.");
 
         // Create notification default intent.
-        Intent intent = new Intent(this, CBRDeviceScanActivity.class);
+        Intent intent = new Intent(this, CBRMainActivity.class);
         intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, currentDeviceName);
         intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, currentDeviceAddress);
 
@@ -425,10 +425,10 @@ public class CBRBluetoothLeService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         // Make notification show big text.
         NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
-        bigTextStyle.setBigContentTitle("CB Remote foreground service.");
-        bigTextStyle.bigText("This service will continue running tasks even if app is closed");
+        bigTextStyle.setBigContentTitle("CB Remote");
+        bigTextStyle.bigText("This service will continue long running tasks in background.");
         builder.setStyle(bigTextStyle);
-        builder.addAction(0, "Disconnect", disconnectPendingIntent);
+        builder.addAction(0, "Quit", disconnectPendingIntent);
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.drawable.ic_launcher);
         Bitmap largeIconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -449,7 +449,7 @@ public class CBRBluetoothLeService extends Service {
     }
 
     private void stopForegroundService() {
-        Log.d(TAG, "Stop foreground service.");
+        //Log.d(TAG, "Stop foreground service.");
 
         // Stop foreground service and remove the notification.
         stopForeground(true);
@@ -506,20 +506,20 @@ public class CBRBluetoothLeService extends Service {
     public void pairAndConnect() {
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+            //Log.e(TAG, "Unable to obtain a BlumBluetoothGatt.discoverServices()etoothAdapter.");
         }
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         /*check if the service is available on the device*/
         BluetoothGattService mCustomService =
                 mBluetoothGatt.getService(UUID.fromString(CBRGattAttributes.CANON_BLUETOOTH_REMOTE_SERVICE));
         if (mCustomService == null) {
-            Log.w(TAG, "Custom BLE Service not found");
+            //Log.w(TAG, "Custom BLE Service not found");
             return;
         }
-        Log.d(TAG, "Pairing/Connecting");
+        //Log.d(TAG, "Pairing/Connecting");
         /*get the read characteristic from the service*/
 
         BluetoothGattCharacteristic mWriteCharacteristic =
@@ -537,7 +537,7 @@ public class CBRBluetoothLeService extends Service {
 
         mWriteCharacteristic.setValue(value);
         if (mBluetoothGatt.writeCharacteristic(mWriteCharacteristic) == false) {
-            Log.e(TAG, "Failed to write characteristic");
+            //Log.e(TAG, "Failed to write characteristic");
         }
     }
 
@@ -594,11 +594,11 @@ public class CBRBluetoothLeService extends Service {
         final BluetoothGattService mCustomService =
                 mBluetoothGatt.getService(UUID.fromString(CBRGattAttributes.CANON_BLUETOOTH_REMOTE_SERVICE));
         if (mCustomService == null) {
-            Log.w(TAG, "Custom BLE Service not found");
+            //Log.w(TAG, "Custom BLE Service not found");
             return;
         }
 
-        Log.d(TAG, "Firing a shot");
+        //Log.d(TAG, "Firing a shot");
         final BluetoothGattCharacteristic mWriteCharacteristicShutter =
                 mCustomService.getCharacteristic(UUID.fromString(CBRGattAttributes.CANON_SHUTTER_CONTROL_SERVICE));
         mWriteCharacteristicShutter.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
@@ -608,13 +608,13 @@ public class CBRBluetoothLeService extends Service {
             public void run() {
 
                 if (mCustomService == null) {
-                    Log.w(TAG, "Custom BLE Service not found");
+                    //Log.w(TAG, "Custom BLE Service not found");
                     sigLockShutter = false;
                     return;
                 }
 
                 if (flagStop == true) {
-                    Log.d(TAG, "Task stopped by user");
+                    //Log.d(TAG, "Task stopped by user");
                     try {
                         wakeLock.release();
                     } catch (Exception ex) {
@@ -624,7 +624,7 @@ public class CBRBluetoothLeService extends Service {
                     return;
                 }
 
-                Log.d(TAG, "trying write");
+                //Log.d(TAG, "trying write");
 
                 if (signal) {
                     mWriteCharacteristicShutter.setValue(signalValue,
@@ -651,7 +651,7 @@ public class CBRBluetoothLeService extends Service {
                             @Override
                             public void run() {
                                 if (mCustomService == null) {
-                                    Log.w(TAG, "Custom BLE Service not found");
+                                    //Log.w(TAG, "Custom BLE Service not found");
                                     sigLockShutter = false;
                                     return;
                                 }
@@ -663,7 +663,7 @@ public class CBRBluetoothLeService extends Service {
                                             BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                                 }
                                 if (!mBluetoothGatt.writeCharacteristic(mWriteCharacteristicShutter)) {
-                                    Log.e(TAG, "Failed to write characteristic Shutter");
+                                    //Log.e(TAG, "Failed to write characteristic Shutter");
                                 }
                                 sigLockShutter = false;
                                 currentProgressValue++;
@@ -676,7 +676,7 @@ public class CBRBluetoothLeService extends Service {
                                         Intent intent = new Intent(ACTION_REPEAT);
                                         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                     } else {
-                                        Log.d(TAG, "Task finished");
+                                        //Log.d(TAG, "Task finished");
                                         try {
                                             wakeLock.release();
                                         } catch (Exception ex) {
@@ -687,7 +687,7 @@ public class CBRBluetoothLeService extends Service {
                             }
                         }, microDelay);
                 } else {
-                    Log.e(TAG, "Failed to write characteristic Shutter");
+                    //Log.e(TAG, "Failed to write characteristic Shutter");
                     sigLockShutter = false;
                 }
             }
@@ -720,7 +720,7 @@ public class CBRBluetoothLeService extends Service {
 
         //TODO wake camera from sleep before shot
 
-        Log.d(TAG, "Shutter Timer called");
+        //Log.d(TAG, "Shutter Timer called");
 
         long initialDelay = 1000 - microDelay;
 
