@@ -30,6 +30,9 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.media.VolumeProviderCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.KeyEvent;
 
 import java.nio.charset.StandardCharsets;
@@ -104,7 +107,7 @@ public class CBRBluetoothLeService extends Service {
     private final Handler handler1Shutter = new Handler();
     public PowerManager powerManager;
     public PowerManager.WakeLock wakeLock;
-    private MediaSession ms;
+    private MediaSessionCompat ms;
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -638,54 +641,54 @@ public class CBRBluetoothLeService extends Service {
                 }
 
                 if (mBluetoothGatt.writeCharacteristic(mWriteCharacteristicShutter) == true && !signal) {
-                        Intent intentProgress = new Intent(CBRConstants.ACTION_MSG_PROGRESS);
-                        if (currentMode.equals(CBRConstants.CBRModes.REPEAT)) {
-                            intentProgress.putExtra("message",
-                                    Integer.toString(currentProgressValue + 1) + "/" + Integer.toString(repeatCountValue));
-                        } else if (currentMode.equals(CBRConstants.CBRModes.ONE)) {
-                            intentProgress.putExtra("message", Integer.toString(currentProgressValue + 1));
-                        }
-                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intentProgress);
-                        final Handler handler2 = new Handler();
-                        handler2.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (mCustomService == null) {
-                                    //Log.w(TAG, "Custom BLE Service not found");
-                                    sigLockShutter = false;
-                                    return;
-                                }
-                                if (currentMode.equals(CBRConstants.CBRModes.VIDEO)) {
-                                    mWriteCharacteristicShutter.setValue(SIGNAL_WAKE_VIDEO,
-                                            BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                                } else {
-                                    mWriteCharacteristicShutter.setValue(SIGNAL_WAKE_IMMEDIATE,
-                                            BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                                }
-                                if (!mBluetoothGatt.writeCharacteristic(mWriteCharacteristicShutter)) {
-                                    //Log.e(TAG, "Failed to write characteristic Shutter");
-                                }
+                    Intent intentProgress = new Intent(CBRConstants.ACTION_MSG_PROGRESS);
+                    if (currentMode.equals(CBRConstants.CBRModes.REPEAT)) {
+                        intentProgress.putExtra("message",
+                                Integer.toString(currentProgressValue + 1) + "/" + Integer.toString(repeatCountValue));
+                    } else if (currentMode.equals(CBRConstants.CBRModes.ONE)) {
+                        intentProgress.putExtra("message", Integer.toString(currentProgressValue + 1));
+                    }
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intentProgress);
+                    final Handler handler2 = new Handler();
+                    handler2.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mCustomService == null) {
+                                //Log.w(TAG, "Custom BLE Service not found");
                                 sigLockShutter = false;
-                                currentProgressValue++;
-                                if (repeat) {
-                                    boolean toRepeat = false;
-                                    if (currentProgressValue < repeatCountValue) {
-                                        toRepeat = true;
-                                    }
-                                    if (toRepeat) {
-                                        Intent intent = new Intent(ACTION_REPEAT);
-                                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                                    } else {
-                                        //Log.d(TAG, "Task finished");
-                                        try {
-                                            wakeLock.release();
-                                        } catch (Exception ex) {
+                                return;
+                            }
+                            if (currentMode.equals(CBRConstants.CBRModes.VIDEO)) {
+                                mWriteCharacteristicShutter.setValue(SIGNAL_WAKE_VIDEO,
+                                        BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                            } else {
+                                mWriteCharacteristicShutter.setValue(SIGNAL_WAKE_IMMEDIATE,
+                                        BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                            }
+                            if (!mBluetoothGatt.writeCharacteristic(mWriteCharacteristicShutter)) {
+                                //Log.e(TAG, "Failed to write characteristic Shutter");
+                            }
+                            sigLockShutter = false;
+                            currentProgressValue++;
+                            if (repeat) {
+                                boolean toRepeat = false;
+                                if (currentProgressValue < repeatCountValue) {
+                                    toRepeat = true;
+                                }
+                                if (toRepeat) {
+                                    Intent intent = new Intent(ACTION_REPEAT);
+                                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                                } else {
+                                    //Log.d(TAG, "Task finished");
+                                    try {
+                                        wakeLock.release();
+                                    } catch (Exception ex) {
 
-                                        }
                                     }
                                 }
                             }
-                        }, microDelay);
+                        }
+                    }, microDelay);
                 } else {
                     //Log.e(TAG, "Failed to write characteristic Shutter");
                     sigLockShutter = false;
@@ -802,11 +805,31 @@ public class CBRBluetoothLeService extends Service {
         PendingIntent disconnectPendingIntent =
                 PendingIntent.getBroadcast(this, 4, disconnectIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        ms = new MediaSession(getApplicationContext(), getPackageName());
-        ms.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
+        ms = new MediaSessionCompat(getApplicationContext(), getPackageName());
+        ms.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        ms.setPlaybackState(new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 0) //you simulate a player which plays something.
+                .build());
+
+        //this will only work on Lollipop and up, see https://code.google.com/p/android/issues/detail?id=224134
+        VolumeProviderCompat myVolumeProvider =
+                new VolumeProviderCompat(VolumeProviderCompat.VOLUME_CONTROL_RELATIVE, /*max volume*/100, /*initial volume level*/50) {
+                    @Override
+                    public void onAdjustVolume(int direction) {
+
+                        if(direction != 0)
+                        {
+                            clickShutter();
+                        }
+                    }
+                };
+
+        ms.setPlaybackToRemote(myVolumeProvider);
         ms.setActive(true);
 
-        ms.setCallback(new MediaSession.Callback() {
+        ms.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
 
@@ -822,6 +845,7 @@ public class CBRBluetoothLeService extends Service {
             }
 
         });
+
 
         ms.setMediaButtonReceiver(disconnectPendingIntent);
         AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
