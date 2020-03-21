@@ -9,6 +9,9 @@ public class CBRConstants {
     public final static String ACTION_GATT_DISCONNECTED = "com.iebyt.cbremote.bluetooth.le.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.iebyt.cbremote.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.iebyt.cbremote.bluetooth.le.ACTION_DATA_AVAILABLE";
+    public final static String ACTION_GATT_PAIRING_SECOND_PART = "com.iebyt.cbremote.bluetooth.le.ACTION_GATT_PAIRING_SECOND_PART";
+    public final static String ACTION_GATT_IS_PAIRED= "com.iebyt.cbremote.bluetooth.le.ACTION_GATT_IS_PAIRED";
+    public final static String ACTION_GATT_PAIRING_FIRST_PART= "com.iebyt.cbremote.bluetooth.le.ACTION_GATT_PAIRING_FIRST_PART";
     public final static String EXTRA_DATA = "com.iebyt.cbremote.bluetooth.le.EXTRA_DATA";
 
     public static class CBRModes{

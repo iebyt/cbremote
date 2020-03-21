@@ -13,11 +13,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -26,6 +28,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +44,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
+
+
 public class CBRMainActivity extends AppCompatActivity {
 
     private CBRMainActivity.LeDeviceListAdapter mLeDeviceListAdapter;
@@ -54,6 +61,28 @@ public class CBRMainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_LOCATION = 2;
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
+    private static final String TAG = "MainActivity";
+
+    public static SharedPreferences sharedpreferences;
+
+    private void IntentDeviceConnection(BluetoothDevice device)
+    {
+        final Intent intent = new Intent(getApplicationContext(), CBRDeviceControlActivity.class);
+        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
+        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2  && device.getBondState() == BluetoothDevice.BOND_NONE) {
+
+            device.createBond();
+        }
+
+        if (mScanning) {
+            scanLeDevice(false);
+        }
+
+        mBluetoothAdapter.getBluetoothLeScanner().stopScan(mLeScanCallback);
+        startActivity(intent);
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,22 +94,18 @@ public class CBRMainActivity extends AppCompatActivity {
         getSupportActionBar().setLogo(R.drawable.ic_launcher);
         getSupportActionBar().setTitle(" CB Remote");
 
+        sharedpreferences = getSharedPreferences("DeviceAddresssLoaded", Context.MODE_PRIVATE);
+
 
         mHandler = new Handler();
         listView=findViewById(R.id.lv_device_list);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                final BluetoothDevice device = mLeDeviceListAdapter.getDevice(i);
-                if (device == null) return;
-                final Intent intent = new Intent(getApplicationContext(), CBRDeviceControlActivity.class);
-                intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
-                intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-                if (mScanning) {
-                    scanLeDevice(false);
-                }
-                startActivity(intent);
+                IntentDeviceConnection(mLeDeviceListAdapter.getDevice(i));
             }
+
+
         });
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -103,21 +128,6 @@ public class CBRMainActivity extends AppCompatActivity {
             return;
         }
     }
-
-
-//    @Override
-//    protected void onListItemClick(ListView l, View v, int position, long id) {
-//        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
-//        if (device == null) return;
-//        final Intent intent = new Intent(this, CBRDeviceControlActivity.class);
-//        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
-//        intent.putExtra(CBRDeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-//        if (mScanning) {
-//            mBluetoothAdapter.stopLeScan(mLeScanCallback);
-//            mScanning = false;
-//        }
-//        startActivity(intent);
-//    }
 
 
     @Override
@@ -185,7 +195,7 @@ public class CBRMainActivity extends AppCompatActivity {
             mLeDeviceListAdapter = new CBRMainActivity.LeDeviceListAdapter();
 //            setListAdapter(mLeDeviceListAdapter);
             listView.setAdapter(mLeDeviceListAdapter);
-//            scanLeDevice(true);
+            scanLeDevice(true);
         }
     }
 
@@ -239,6 +249,7 @@ public class CBRMainActivity extends AppCompatActivity {
         invalidateOptionsMenu();
     }
 
+
     // Adapter for holding devices found through scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
@@ -253,6 +264,14 @@ public class CBRMainActivity extends AppCompatActivity {
         public void addDevice(BluetoothDevice device) {
             if (!mLeDevices.contains(device)) {
                 mLeDevices.add(device);
+
+
+                String  alreadyPairedDevice = sharedpreferences.getString("deviceaddress",null);
+
+                if(device.getAddress().equals(alreadyPairedDevice)){
+                    IntentDeviceConnection(device);
+
+                }
             }
         }
 

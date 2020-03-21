@@ -26,6 +26,8 @@ import com.iebyt.cbremote.views.DialogBulbHoloActivity;
 import com.iebyt.cbremote.views.DialogDelayHoloActivity;
 import com.iebyt.cbremote.views.DialogRepeatHoloActivity;
 
+import static android.os.SystemClock.sleep;
+
 /**
  * For a given BLE device, this Activity provides the user interface to connect, display data,
  * and display GATT services and characteristics supported by the device.  The Activity
@@ -118,8 +120,20 @@ public class CBRDeviceControlActivity extends Activity {
                 mConnected = false;
                 updateConnectionState(R.string.disconnected);
                 invalidateOptionsMenu();
+                mBluetoothLeService.connect(mDeviceAddress);
             } else if (CBRConstants.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                mBluetoothLeService.pairAndConnect();
+                mBluetoothLeService.CheckIfPaired();
+            }
+            else if (CBRConstants.ACTION_GATT_PAIRING_SECOND_PART.equals(action)) {
+                mBluetoothLeService.pairAndConnectSecondPart();
+            }
+            else if (CBRConstants.ACTION_GATT_IS_PAIRED.equals(action)) {
+                mBluetoothLeService.pairAndConnectByStep(7);
+                sleep(1000);
+            }
+            else if (CBRConstants.ACTION_GATT_PAIRING_FIRST_PART.equals(action)) {
+                mBluetoothLeService.pairAndConnectFirstPart();
+                updateConnectionState(R.string.connecting);
             }
         }
     };
@@ -353,6 +367,9 @@ public class CBRDeviceControlActivity extends Activity {
         intentFilter.addAction(CBRConstants.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(CBRConstants.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(CBRConstants.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(CBRConstants.ACTION_GATT_PAIRING_SECOND_PART);
+        intentFilter.addAction(CBRConstants.ACTION_GATT_IS_PAIRED);
+        intentFilter.addAction(CBRConstants.ACTION_GATT_PAIRING_FIRST_PART);
         return intentFilter;
     }
 
